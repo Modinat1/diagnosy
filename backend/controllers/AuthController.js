@@ -3,19 +3,33 @@ import dbClient from "../storage/db";
 import redisClient from "../storage/redis";
 import sha1 from "sha1";
 
+/**
+ * Class representing the authentication controller.
+ */
 class AuthController {
+  /**
+   * Authenticates a user and generates a token upon successful sign-in.
+   *
+   * @async
+   * @param {Object} request - The request object.
+   * @param {Object} response - The response object.
+   * @returns {Promise<void>} - A Promise that resolves when the operation is complete.
+   */
   static async getConnect(request, response) {
-    const { email, password } = request.body;
-    const user = await dbClient.fetchUserByEmail({ email });
-    console.log(user);
-    if (user) {
-      const hashedPassword = sha1(password);
-      if (hashedPassword === user.password) {
-        try {
+    try {
+      const { email, password } = request.body;
+      const user = await dbClient.fetchUserByEmail({ email });
+
+      if (user) {
+        const hashedPassword = sha1(password);
+
+        if (hashedPassword === user.password) {
           const token = uuidv4();
           const key = `auth_${token}`;
-          console.log(key)
+
+          
           await redisClient.set(key, user._id.toString(), 86400);
+
           response
             .status(200)
             .json({
@@ -24,11 +38,14 @@ class AuthController {
               data: { token },
             })
             .end();
-        } catch (error) {
-          console.error(error);
+        } else {
           response
-            .status(504)
-            .json({ status: "error", message: error.message, data: null })
+            .status(401)
+            .json({
+              status: "error",
+              message: "Incorrect password",
+              data: null,
+            })
             .end();
         }
       } else {
@@ -36,27 +53,34 @@ class AuthController {
           .status(401)
           .json({
             status: "error",
-            message: "Incorrect password",
+            message: "User does not exist",
             data: null,
           })
           .end();
       }
-    } else {
+    } catch (error) {
+      
+      console.error(error);
       response
-        .status(401)
-        .json({
-          status: "error",
-          message: "User does not exist",
-          data: null,
-        })
+        .status(500)
+        .json({ status: "error", message: "Internal Server Error", data: null })
         .end();
     }
   }
 
+  /**
+   * Logs out a user by deleting their authentication token.
+   *
+   * @async
+   * @param {Object} request - The request object.
+   * @param {Object} response - The response object.
+   * @returns {Promise<void>} - A Promise that resolves when the operation is complete.
+   */
   static async getDisconnect(request, response) {
     const token = request.headers["auth-token"];
     const key = `auth_${token}`;
     const userID = await redisClient.get(key);
+
     if (!userID) {
       response
         .status(401)
@@ -68,6 +92,7 @@ class AuthController {
         .end();
     } else {
       const user = await dbClient.fetchUserByID(userID);
+
       if (!user) {
         response
           .status(404)
@@ -84,13 +109,21 @@ class AuthController {
     }
   }
 
+  /**
+   * Retrieves the information of the authenticated user.
+   *
+   * @async
+   * @param {Object} request - The request object.
+   * @param {Object} response - The response object.
+   * @returns {Promise<void>} - A Promise that resolves when the operation is complete.
+   */
   static async getMe(request, response) {
     const token = request.headers["auth-token"];
     const key = `auth_${token}`;
-    console.log(key)
+
     try {
       const userID = await redisClient.get(key);
-      console.log(userID)
+
       if (!userID) {
         response
           .status(401)
@@ -102,6 +135,7 @@ class AuthController {
           .end();
       } else {
         const user = await dbClient.fetchUserByID(userID);
+
         if (!user) {
           response
             .status(404)

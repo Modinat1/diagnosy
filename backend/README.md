@@ -79,26 +79,6 @@ For detailed information on each route, refer to the [api_documentation]section 
 - [Sha1](https://www.npmjs.com/package/sha1) - Library for generating SHA-1 hash.
 
 ## Contributors
-**Ngozi**
-
-Title: UI/UX Designer/Team Lead
-
-[LinkedIn Profile](https://www.linkedin.com/in/michael-adebayo-637507251/)
-
-[Portfolio](https://mikerock.tech)
-
-
-**Modinat**
-
-Title: Frontend Engineer
-
-[GitHub Profile](https://github.com/Modinat1)
-
-[LinkedIn Profile](https://www.linkedin.com/in/michael-adebayo-637507251/)
-
-[Portfolio](https://mikerock.tech)
-
-
 **Michael Adebayo**
 
 Title: Fullstack Engineer
